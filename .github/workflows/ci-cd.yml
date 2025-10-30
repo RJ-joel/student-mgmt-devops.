@@ -1,0 +1,48 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  ACR_NAME: studentregistryjoel          # your ACR name
+  IMAGE_NAME: student-mgmt-backend       # image name
+  RESOURCE_GROUP: studentRG              # your RG name
+  AKS_CLUSTER: studentAKSCluster         # your AKS cluster name
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1 - Checkout code from GitHub
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2 - Login to Azure
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Step 3 - Login to ACR
+      - name: Login to Azure Container Registry
+        run: az acr login --name $ACR_NAME
+
+      # Step 4 - Build Docker image
+      - name: Build Docker image
+        run: docker build -t $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.run_number }} ./backend
+
+      # Step 5 - Push image to ACR
+      - name: Push Docker image
+        run: docker push $ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.run_number }}
+
+      # Step 6 - Get AKS credentials
+      - name: Get AKS credentials
+        run: az aks get-credentials --resource-group $RESOURCE_GROUP --name $AKS_CLUSTER --overwrite-existing
+
+      # Step 7 - Update image in existing deployment
+      - name: Update Kubernetes Deployment
+        run: |
+          kubectl set image deployment/student-backend \
+          student-backend=$ACR_NAME.azurecr.io/$IMAGE_NAME:${{ github.run_number }}
