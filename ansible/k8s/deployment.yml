@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: student-backend
-          image: studentregistryjoel.azurecr.io/student-mgmt-backend:v1
+          image: studentregistryjoel.azurecr.io/student-mgmt-devops-backend:v2
           ports:
             - containerPort: 5000
           imagePullPolicy: Always

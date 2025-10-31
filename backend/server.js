@@ -33,8 +33,8 @@ app.post("/students", async (req, res) => {
 // Health check
 app.get("/health", (req, res) => res.send({ status: "ok" }));
 
-// For any other route, serve index.html
-app.get("*", (req, res) => {
+// ✅ Fix: use regex instead of "/*" (Express v5+ safe)
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
